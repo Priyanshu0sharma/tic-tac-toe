@@ -27,3 +27,15 @@ button#resetBtn:hover{background:#555;transform:scale(1.05);}
 .light-theme body{background:#eee;color:#111;}
 .light-theme .cell{background:#fff;box-shadow:0 5px 15px rgba(0,0,0,0.2);}
 .light-theme header button, .light-theme #resetBtn, .light-theme .difficulty-container button, .light-theme .online-container .box{background:#ddd;color:#111;}
+/* message box */
+#gameMessage { box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+#gameMessage.win { animation: pop .45s ease; }
+#gameMessage.lose { animation: pop .45s ease; }
+@keyframes pop { from { transform: translateX(-50%) translateY(-10px) scale(.98); opacity:0 } to { transform: translateX(-50%) translateY(0) scale(1); opacity:1 } }
+
+/* winning cell animation */
+.cell.win {
+  box-shadow: 0 8px 40px rgba(46,204,113,0.25);
+  transition: transform .3s ease;
+}
+.cell.win:hover { transform: scale(1.03); }
