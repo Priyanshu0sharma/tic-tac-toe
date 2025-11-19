@@ -215,3 +215,15 @@ function listenRoom(roomId) {
 // AUTO-START ONLY LOCAL
 // =======================
 if (window.location.pathname.includes("local.html")) startGame();
+// Auto-start only for local and robot pages
+if (window.location.pathname.includes("local.html")) {
+    gameMode = "local";
+    startGame();
+}
+
+if (window.location.pathname.includes("robot.html")) {
+    // robot mode me difficulty screen honi chahiye
+    gameMode = "robot";
+}
+
+
