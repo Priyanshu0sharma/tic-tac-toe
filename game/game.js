@@ -6,14 +6,14 @@ const cells = document.querySelectorAll(".cell");
 const statusElement = document.getElementById("status");
 const resetBtn = document.getElementById("resetBtn");
 
-// Robot Mode Controls
+// Robot mode buttons
 const easyBtn = document.getElementById("easyBtn");
 const hardBtn = document.getElementById("hardBtn");
 const startBtn = document.getElementById("startBtn");
 const difficultyContainer = document.getElementById("difficultyContainer");
 const startContainer = document.getElementById("startContainer");
 
-// Online Mode Controls
+// Online mode buttons
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 const joinInput = document.getElementById("joinInput");
@@ -22,22 +22,40 @@ const roomIdDisplay = document.getElementById("roomIdDisplay");
 let board = Array(9).fill("");
 let currentPlayer = "X";
 let isGameOver = false;
-let gameMode = "local";
+
+let gameMode = "";        // "local", "robot", or "online"
 let difficulty = "easy";
+
 let roomId = null;
 let mySymbol = "";
-let db = firebase.database();
+let db;
+
+// =======================
+// Firebase (only if online.html)
+// =======================
+if (typeof firebase !== "undefined") {
+    db = firebase.database();
+}
 
 // =======================
 // ROBOT MODE
 // =======================
-if (easyBtn) easyBtn.onclick = () => { difficulty = "easy"; prepareStart(); };
-if (hardBtn) hardBtn.onclick = () => { difficulty = "hard"; prepareStart(); };
+if (easyBtn) {
+    easyBtn.onclick = () => {
+        gameMode = "robot";
+        difficulty = "easy";
+        difficultyContainer.style.display = "none";
+        startContainer.style.display = "block";
+    };
+}
 
-function prepareStart() {
-    difficultyContainer.style.display = "none";
-    startContainer.style.display = "block";
-    gameMode = "robot";
+if (hardBtn) {
+    hardBtn.onclick = () => {
+        gameMode = "robot";
+        difficulty = "hard";
+        difficultyContainer.style.display = "none";
+        startContainer.style.display = "block";
+    };
 }
 
 startBtn?.addEventListener("click", startGame);
@@ -63,15 +81,11 @@ function startGame() {
     if (startContainer) startContainer.style.display = "none";
 
     if (gameMode === "online") {
-        updateRoom(board, currentPlayer, false);
+        updateRoom();
     }
 }
 
-resetBtn?.addEventListener("click", () => {
-    if (gameMode === "online") {
-        startGame();
-    } else startGame();
-});
+resetBtn?.addEventListener("click", startGame);
 
 // =======================
 // CELL CLICK
@@ -87,11 +101,12 @@ cells.forEach(cell => {
         if (board[idx] === "" && !isGameOver) {
             makeMove(idx, currentPlayer);
 
-            if (gameMode === "robot" && currentPlayer === "O")
+            if (gameMode === "robot" && currentPlayer === "O") {
                 setTimeout(robotMove, 300);
+            }
 
             if (gameMode === "online") {
-                updateRoom(board, currentPlayer, isGameOver);
+                updateRoom();
             }
         }
     };
@@ -111,12 +126,19 @@ function makeMove(index, player) {
 }
 
 // =======================
-// ROBOT AI
+// ROBOT MOVE
 // =======================
 function robotMove() {
-    let emptyCells = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-    let index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    makeMove(index, "O");
+    let empty = board
+        .map((v, i) => (v === "" ? i : null))
+        .filter(v => v !== null);
+
+    let idx =
+        difficulty === "easy"
+            ? empty[Math.floor(Math.random() * empty.length)]
+            : empty[0]; // simple (you can add minimax later)
+
+    makeMove(idx, "O");
 }
 
 // =======================
@@ -144,30 +166,31 @@ function checkWinner() {
     }
 }
 
-// ============================
-// ONLINE MODE — CREATE ROOM
-// ============================
+// =======================
+// ONLINE MODE — CREATE
+// =======================
 createBtn?.addEventListener("click", () => {
     roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     mySymbol = "X";
     gameMode = "online";
 
     db.ref("rooms/" + roomId).set({
-        board: board,
+        board,
         turn: "X",
         gameOver: false
     });
 
     roomIdDisplay.textContent = roomId;
+
     boardElement.style.display = "grid";
     resetBtn.style.display = "inline-block";
 
-    listenRoom(roomId);
+    listenRoom();
 });
 
-// ============================
-// ONLINE MODE — JOIN ROOM
-// ============================
+// =======================
+// ONLINE MODE — JOIN
+// =======================
 joinBtn?.addEventListener("click", () => {
     roomId = joinInput.value.trim().toUpperCase();
     if (!roomId) return;
@@ -175,24 +198,24 @@ joinBtn?.addEventListener("click", () => {
     mySymbol = "O";
     gameMode = "online";
 
-    listenRoom(roomId);
+    listenRoom();
 });
 
-// ============================
-// ONLINE MODE — UPDATE ROOM
-// ============================
-function updateRoom(board, turn, gameOver) {
+// =======================
+// UPDATE ROOM
+// =======================
+function updateRoom() {
     db.ref("rooms/" + roomId).update({
-        board: board,
+        board,
         turn: currentPlayer,
         gameOver: isGameOver
     });
 }
 
-// ============================
-// ONLINE MODE — LISTEN ROOM
-// ============================
-function listenRoom(roomId) {
+// =======================
+// LISTEN ROOM
+// =======================
+function listenRoom() {
     db.ref("rooms/" + roomId).on("value", snap => {
         let data = snap.val();
         if (!data) return;
@@ -205,25 +228,16 @@ function listenRoom(roomId) {
             cells[i].textContent = board[i];
             cells[i].style.pointerEvents = board[i] === "" ? "auto" : "none";
         }
-    });
 
-    boardElement.style.display = "grid";
-    resetBtn.style.display = "inline-block";
+        boardElement.style.display = "grid";
+        resetBtn.style.display = "inline-block";
+    });
 }
 
-// =======================
-// AUTO-START ONLY LOCAL
-// =======================
-if (window.location.pathname.includes("local.html")) startGame();
-// Auto-start only for local and robot pages
+// ===========================
+// ONLY LOCAL AUTOSTART
+// ===========================
 if (window.location.pathname.includes("local.html")) {
     gameMode = "local";
     startGame();
 }
-
-if (window.location.pathname.includes("robot.html")) {
-    // robot mode me difficulty screen honi chahiye
-    gameMode = "robot";
-}
-
-
