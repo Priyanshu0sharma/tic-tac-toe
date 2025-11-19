@@ -27,6 +27,33 @@ button#resetBtn:hover{background:#555;transform:scale(1.05);}
 .light-theme body{background:#eee;color:#111;}
 .light-theme .cell{background:#fff;box-shadow:0 5px 15px rgba(0,0,0,0.2);}
 .light-theme header button, .light-theme #resetBtn, .light-theme .difficulty-container button, .light-theme .online-container .box{background:#ddd;color:#111;}
+.result-box {
+    margin-top: 20px;
+    padding: 20px 30px;
+    border-radius: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    animation: pop 0.4s ease forwards;
+    display: inline-block;
+}
+
+@keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.win-banner {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 0 20px #4caf5080;
+}
+
+.lose-banner {
+    background: #D32F2F;
+    color: white;
+    box-shadow: 0 0 20px #ff000080;
+}
 /* message box */
 #gameMessage { box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
 #gameMessage.win { animation: pop .45s ease; }
