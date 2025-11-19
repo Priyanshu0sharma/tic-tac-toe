@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online - Tic Tac Toe</title>
+
+    <link rel="stylesheet" href="game.css">
+
+    <!-- Firebase COMPAT (REQUIRED) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+
+<body class="dark-theme">
+    <header>
+        <h1>Online Mode</h1>
+        <button onclick="location.href='../index.html'">🏠 Back</button>
+    </header>
+
+    <main>
+
+        <div class="online-container">
+            <div class="box">
+                <h2>Create Game</h2>
+                <button id="createBtn">Create</button>
+                <p>Room ID: <span id="roomIdDisplay"></span></p>
+                <p id="creatorInfo"></p>
+            </div>
+
+            <div class="box">
+                <h2>Join Game</h2>
+                <input type="text" id="joinInput" placeholder="Enter Room ID">
+                <button id="joinBtn">Join</button>
+                <p id="joinInfo"></p>
+            </div>
+        </div>
+
+        <div class="board" id="board" style="display:none;">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div id="status"></div>
+        <button id="resetBtn" style="display:none;">Reset</button>
+
+    </main>
+
+    <script src="../firebase-config.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
