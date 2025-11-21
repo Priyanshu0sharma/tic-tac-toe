@@ -21,8 +21,14 @@ const online = {
 
   loadUser: function() {
     const nameInput = document.getElementById('playerNameInput');
-    let name = localStorage.getItem('playerName') || 'Guest';
-    if(nameInput && nameInput.value) name = nameInput.value;
+    let name = localStorage.getItem('playerName');
+    
+    // 2. DEVICE-BASED USERNAME ID
+    if (!name) {
+        const randomId = Math.floor(10000 + Math.random() * 90000);
+        name = `guest${randomId}`;
+        localStorage.setItem('playerName', name);
+    }
     
     let uid = localStorage.getItem('playerUid');
     if (!uid) {
@@ -32,10 +38,8 @@ const online = {
     this.user = { name, uid };
     
     // Update input if exists
-    if(nameInput && !nameInput.value) nameInput.value = name;
-    
-    // Save name on change
     if(nameInput) {
+        if(!nameInput.value) nameInput.value = name;
         nameInput.addEventListener('change', () => {
             this.user.name = nameInput.value;
             localStorage.setItem('playerName', this.user.name);
@@ -43,64 +47,109 @@ const online = {
     }
   },
 
-  // --- Matchmaking ---
-  
-
-  // --- Matchmaking ---
+  // --- Matchmaking (Fixed) ---
   
   findMatch: async function() {
     if(!this.user.name) { showFloatingMessage('Please enter your name', 'error'); return; }
     
-    // Show UI
     this.showFindingPopup();
     
-    // Simulate delay for "Finding Player" effect (2-4 seconds)
+    // Delay for UI effect
     const delay = 2000 + Math.random() * 2000;
-    
-    // We start the actual search after a short delay to let the animation play
-    // or we can start it immediately but wait to show result.
-    // Let's start immediately but enforce minimum wait time.
     const startTime = Date.now();
     
+    // Generate Room ID upfront
+    const myRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     const queueRef = this.db.ref('queue/waitingPlayer');
     
-    // Transaction to atomically check/claim queue
+    // 3. RANDOM ONLINE MATCH - Not Connecting Issue Fix
+    // Use 'matched' state in queue to sync players
     const result = await queueRef.transaction(current => {
       if (current === null) {
-        // Queue is empty, add self
-        return { name: this.user.name, uid: this.user.uid, timestamp: Date.now() };
-      } else {
-        // Someone is waiting
-        if (current.uid === this.user.uid) return; // Already in queue
-        return null; // Remove them to claim match
+        // Queue empty: I wait
+        return { uid: this.user.uid, name: this.user.name, state: 'waiting', timestamp: Date.now() };
+      } else if (current.state === 'waiting' && current.uid !== this.user.uid) {
+        // Someone waiting: I match with them
+        return { ...current, state: 'matched', matcher: { uid: this.user.uid, name: this.user.name }, roomId: myRoomId };
       }
+      return; // Abort
     });
 
     if (result.committed) {
       const val = result.snapshot.val();
-      if (val && val.uid === this.user.uid) {
-        // We are now waiting
-        console.log("Added to queue. Waiting...");
-        this.listenForMatch(startTime, delay);
-      } else {
-        // We matched! 'val' is the opponent who WAS in the queue
-        const opponent = val; 
-        console.log("Matched with", opponent.name);
-        
-        // Ensure we wait at least the delay time before starting
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, delay - elapsed);
-        
-        setTimeout(() => {
-            this.createRoom(opponent);
-        }, remaining);
-      }
+      
+      // Wait for delay before proceeding
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, delay - elapsed);
+      
+      setTimeout(() => {
+          if (val.uid === this.user.uid && val.state === 'waiting') {
+            // I am waiting
+            this.listenForMatch();
+          } else if (val.state === 'matched' && val.matcher.uid === this.user.uid) {
+            // I matched! (I am B)
+            const opponent = { name: val.name, uid: val.uid };
+            this.createRoom(opponent, myRoomId);
+          }
+      }, remaining);
     } else {
-      // Transaction failed (race condition), try again
       setTimeout(() => this.findMatch(), 500);
     }
   },
 
+  listenForMatch: function() {
+    const queueRef = this.db.ref('queue/waitingPlayer');
+    
+    // Listen to queue node for 'matched' state
+    const listener = queueRef.on('value', snap => {
+      const val = snap.val();
+      if (val && val.uid === this.user.uid && val.state === 'matched') {
+        // I was matched!
+        queueRef.off('value', listener);
+        queueRef.remove(); // Clear queue
+        this.cancelSearch(true); // Hide popup only
+        this.joinGame(val.roomId, 'O'); // Waiter is O
+      } else if (val === null) {
+          // Queue cleared (maybe I disconnected or manual cancel)
+          // If I didn't cancel, this is weird.
+      }
+    });
+    
+    // Timeout 20s
+    setTimeout(() => {
+        queueRef.once('value', snap => {
+            if(snap.val() && snap.val().uid === this.user.uid && snap.val().state === 'waiting') {
+                queueRef.remove();
+                this.cancelSearch();
+                showFloatingMessage('No players found. Try again.', 'error');
+            }
+        });
+    }, 20000);
+  },
+
+  createRoom: async function(opponent, predefinedRoomId) {
+    const roomId = predefinedRoomId || Math.random().toString(36).substring(2, 8).toUpperCase();
+    const roomRef = this.db.ref('rooms/' + roomId);
+    
+    await roomRef.set({
+      board: Array(9).fill(''),
+      turn: 'X',
+      lastStarter: 'X', // Track starter for swap
+      gameOver: false,
+      creator: { name: this.user.name, uid: this.user.uid },
+      joiner: { name: opponent.name, uid: opponent.uid },
+      lastMove: Date.now()
+    });
+    
+    // If not random match (predefined), notify via user node (legacy/private support)
+    if (!predefinedRoomId) {
+        await this.db.ref('users/' + opponent.uid + '/match').set(roomId);
+    }
+    
+    this.cancelSearch(true);
+    this.joinGame(roomId, 'X');
+  },
+  
   showFindingPopup: function() {
       let popup = document.getElementById('findingPopup');
       if(!popup) {
@@ -119,88 +168,26 @@ const online = {
             </div>
           `;
           document.body.appendChild(popup);
-          
-          document.getElementById('cancelSearchBtn').addEventListener('click', () => {
-             this.cancelSearch(); 
-          });
+          document.getElementById('cancelSearchBtn').addEventListener('click', () => this.cancelSearch());
       }
       popup.style.display = 'flex';
   },
   
-  cancelSearch: function() {
-      // Remove from queue if in it
-      const queueRef = this.db.ref('queue/waitingPlayer');
-      queueRef.transaction(current => {
-          if(current && current.uid === this.user.uid) return null;
-          return current;
-      });
-      
-      // Stop listening
-      const myMatchRef = this.db.ref('users/' + this.user.uid + '/match');
-      myMatchRef.off();
-      
-      // Hide popup
+  cancelSearch: function(hideOnly = false) {
       const popup = document.getElementById('findingPopup');
       if(popup) popup.style.display = 'none';
       
-      showFloatingMessage('Search cancelled', 'info');
-  },
-
-  listenForMatch: function(startTime, minDelay) {
-    const queueRef = this.db.ref('queue/waitingPlayer');
-    
-    // Listen to our own match node
-    const myMatchRef = this.db.ref('users/' + this.user.uid + '/match');
-    myMatchRef.on('value', snap => {
-      const roomId = snap.val();
-      if (roomId) {
-        // Match found!
-        myMatchRef.remove(); // Clear match info
-        queueRef.off(); // Stop listening to queue
-        
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, minDelay - elapsed);
-        
-        setTimeout(() => {
-            this.joinGame(roomId, 'O'); // Waiter is always O (Joiner)
-        }, remaining);
+      if (!hideOnly) {
+          const queueRef = this.db.ref('queue/waitingPlayer');
+          queueRef.transaction(current => {
+              if(current && current.uid === this.user.uid) return null;
+              return current;
+          });
+          showFloatingMessage('Search cancelled', 'info');
       }
-    });
-    
-    // Timeout after 20s
-    setTimeout(() => {
-        queueRef.once('value', snap => {
-            if(snap.val() && snap.val().uid === this.user.uid) {
-                queueRef.remove();
-                this.cancelSearch(); // Reuse cancel logic to hide popup
-                showFloatingMessage('No players found. Try again.', 'error');
-            }
-        });
-    }, 20000);
   },
 
-  createRoom: async function(opponent) {
-    const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const roomRef = this.db.ref('rooms/' + roomId);
-    
-    await roomRef.set({
-      board: Array(9).fill(''),
-      turn: 'X',
-      gameOver: false,
-      creator: { name: this.user.name, uid: this.user.uid },
-      joiner: { name: opponent.name, uid: opponent.uid },
-      lastMove: Date.now()
-    });
-    
-    // Notify opponent
-    await this.db.ref('users/' + opponent.uid + '/match').set(roomId);
-    
-    // Join as Creator (X)
-    this.joinGame(roomId, 'X');
-  },
-  
   // --- Private Rooms ---
-  
   createPrivateRoom: async function() {
     if(!this.user.name) { showFloatingMessage('Enter name first', 'error'); return; }
     const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -209,9 +196,10 @@ const online = {
     await roomRef.set({
       board: Array(9).fill(''),
       turn: 'X',
+      lastStarter: 'X',
       gameOver: false,
       creator: { name: this.user.name, uid: this.user.uid },
-      joiner: null, // Waiting for joiner
+      joiner: null,
       isPrivate: true
     });
     
@@ -238,7 +226,6 @@ const online = {
   },
 
   // --- Navigation ---
-  
   joinGame: function(roomId, symbol) {
     sessionStorage.setItem('currentRoomId', roomId);
     sessionStorage.setItem('mySymbol', symbol);
@@ -246,7 +233,6 @@ const online = {
   },
   
   // --- Leaderboard ---
-  
   updateLeaderboard: function(winnerUid) {
       if(!winnerUid) return;
       const ref = this.db.ref('leaderboard/' + winnerUid);
@@ -257,9 +243,8 @@ const online = {
   },
 
   // --- Game Logic ---
-  
   initGame: function() {
-    if(!this.init()) return; // Ensure DB is ready
+    if(!this.init()) return;
     
     this.roomId = sessionStorage.getItem('currentRoomId');
     this.mySymbol = sessionStorage.getItem('mySymbol');
@@ -274,24 +259,19 @@ const online = {
     // UI Elements
     const cells = document.querySelectorAll('.cell');
     const statusEl = document.getElementById('status');
-    const resetBtn = document.getElementById('resetBtn'); // Play Again
     const roomIdDisplay = document.getElementById('roomIdDisplay');
     if(roomIdDisplay) roomIdDisplay.textContent = 'Room: ' + this.roomId;
     
-    // Listeners
     cells.forEach(c => c.addEventListener('click', (e) => {
         const idx = e.target.dataset.index;
         this.makeMove(idx);
     }));
-    
-    if(resetBtn) resetBtn.addEventListener('click', () => this.votePlayAgain());
     
     // Sync
     this.roomRef.on('value', snap => {
         const data = snap.val();
         if(!data) return;
         
-        // Check if opponent joined (for private rooms)
         if(!data.joiner && this.mySymbol === 'X') {
              statusEl.textContent = "Waiting for opponent to join...";
              return;
@@ -303,7 +283,10 @@ const online = {
         if(data.gameOver) {
             this.handleGameOver(data);
         } else {
-            // Timer logic
+            // Clear popup if game restarted
+            const popup = document.getElementById('endPopup');
+            if(popup) popup.style.display = 'none';
+            
             if(data.turn === this.mySymbol) {
                 startTurnTimer(15, () => this.autoMove(data.board));
             } else {
@@ -313,12 +296,11 @@ const online = {
         
         // Play Again Sync
         if(data.rematch && data.rematch.X && data.rematch.O) {
-            this.resetGame();
+            this.resetGame(data);
         }
     });
     
-    // Handle disconnect
-    this.roomRef.onDisconnect().remove(); // Or mark as abandoned
+    this.roomRef.onDisconnect().remove();
   },
   
   renderBoard: function(board) {
@@ -326,21 +308,17 @@ const online = {
       board = board || Array(9).fill('');
       cells.forEach((c, i) => {
           c.textContent = board[i];
-          c.className = 'cell'; // Reset classes
+          c.className = 'cell';
           if(board[i]) c.classList.add('disabled');
       });
   },
   
   updateStatus: function(data) {
       const statusEl = document.getElementById('status');
-      if(data.gameOver) return; // Handled in handleGameOver
+      if(data.gameOver) return;
       
-      if(!data.joiner) {
-           statusEl.textContent = "Waiting for opponent...";
-           return;
-      }
+      if(!data.joiner) { statusEl.textContent = "Waiting for opponent..."; return; }
       
-      const myName = this.mySymbol === 'X' ? data.creator.name : data.joiner.name;
       const oppName = this.mySymbol === 'X' ? (data.joiner?data.joiner.name:'Waiting...') : data.creator.name;
       
       if(data.turn === this.mySymbol) {
@@ -355,7 +333,7 @@ const online = {
   makeMove: function(idx) {
       this.roomRef.transaction(room => {
           if(!room || room.gameOver || room.turn !== this.mySymbol) return;
-          if(!room.joiner) return; // Cannot play alone
+          if(!room.joiner) return;
           if(!room.board) room.board = Array(9).fill('');
           if(room.board[idx] !== '') return;
           
@@ -408,29 +386,18 @@ const online = {
               data.winLine.forEach(i => cells[i].classList.add('win'));
           }
           
-          // Update Leaderboard only once (Creator handles it to avoid double writes)
           if(this.mySymbol === 'X' && !data.statsUpdated) {
               const winnerUid = data.winner === 'X' ? data.creator.uid : data.joiner.uid;
               this.updateLeaderboard(winnerUid);
               this.roomRef.update({ statsUpdated: true });
-              
-              // Save History
               this.saveOnlineHistory(data);
           }
       }
       
-      // Show Popup
       this.showEndPopup(data);
   },
   
   saveOnlineHistory: function(data) {
-      // This saves to localStorage of the browser running this function
-      // But we want both players to save history.
-      // So actually both should call saveHistory locally.
-      // Let's do it in showEndPopup or separate local call.
-      // We'll use the shared saveHistory logic but adapted.
-      
-      // Actually, let's just call a local helper.
       const winnerName = data.winner === 'Draw' ? 'Draw' : (data.winner==='X'?data.creator.name:data.joiner.name);
       const entry = {
           mode: 'online',
@@ -448,7 +415,6 @@ const online = {
   },
   
   showEndPopup: function(data) {
-      // Create or show popup
       let popup = document.getElementById('endPopup');
       if(!popup) {
           popup = document.createElement('div');
@@ -463,7 +429,6 @@ const online = {
                     <button id="popupPlayAgain">Play Again</button>
                     <button class="secondary" onclick="window.location.href='online.html'">Exit</button>
                 </div>
-                <div id="popupTimer" style="margin-top:10px; font-size:0.9rem; opacity:0.7;"></div>
             </div>
           `;
           document.body.appendChild(popup);
@@ -475,26 +440,8 @@ const online = {
       document.getElementById('popupTitle').textContent = data.winner === 'Draw' ? 'Draw!' : 'Winner!';
       document.getElementById('popupMessage').textContent = data.winner === 'Draw' ? 'No one won.' : `${winnerName} won the match!`;
       
-      // Auto exit timer
-      let timeLeft = 10;
-      const timerEl = document.getElementById('popupTimer');
-      const interval = setInterval(() => {
-          timeLeft--;
-          timerEl.textContent = `Auto exit in ${timeLeft}s`;
-          if(timeLeft<=0) {
-              clearInterval(interval);
-              window.location.href = 'online.html';
-          }
-      }, 1000);
-      popup._timer = interval;
-      
-      // Save history locally for the joiner too (since creator saved it in handleGameOver)
-      // Wait, handleGameOver runs for BOTH.
-      // But I put the saveOnlineHistory inside `if(this.mySymbol === 'X' && !data.statsUpdated)`
-      // So only Creator saves it? No, that was for Leaderboard.
-      // I should move saveOnlineHistory OUTSIDE that block so both save it.
-      
-      this.saveOnlineHistory(data);
+      // 1. ONLINE MODE - Play Again Issue (Removed Timer)
+      document.getElementById('popupPlayAgain').textContent = 'Play Again';
   },
   
   votePlayAgain: function() {
@@ -503,12 +450,14 @@ const online = {
       this.roomRef.child('rematch').child(this.mySymbol).set(true);
   },
   
-  resetGame: function() {
-      // Reset room data
-      if(this.mySymbol === 'X') { // Only creator resets to avoid race
+  resetGame: function(data) {
+      // 1. ONLINE MODE - Play Again Issue (Turn Swap)
+      if(this.mySymbol === 'X') {
+          const nextStarter = (data.lastStarter === 'X') ? 'O' : 'X';
           this.roomRef.update({
               board: Array(9).fill(''),
-              turn: 'X',
+              turn: nextStarter,
+              lastStarter: nextStarter,
               gameOver: false,
               winner: null,
               winLine: null,
@@ -517,13 +466,10 @@ const online = {
           });
       }
       
-      // Reset UI
+      // UI Reset
       const popup = document.getElementById('endPopup');
-      if(popup) {
-          popup.style.display = 'none';
-          clearInterval(popup._timer);
-          document.getElementById('popupPlayAgain').textContent = 'Play Again';
-      }
+      if(popup) popup.style.display = 'none';
+      
       const cells = document.querySelectorAll('.cell');
       cells.forEach(c => {
           c.classList.remove('win');
