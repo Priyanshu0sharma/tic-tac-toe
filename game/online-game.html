@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Game - Tic Tac Toe</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="theme.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Online Match</h1>
+        <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
+            <div id="roomIdDisplay" style="font-family: monospace; background: var(--bg-color); padding: 5px 10px; border-radius: 5px;">Room: ...</div>
+            <div class="theme-selector-container">
+                <select id="themeSelect" style="padding: 5px; border-radius: 5px;">
+                    <option value="light">Classic Light</option>
+                    <option value="dark">Dark Mode</option>
+                    <option value="neon">Neon Blue</option>
+                    <option value="retro">Pixel Retro</option>
+                </select>
+            </div>
+            <button onclick="location.href='online.html'">🚪 Exit</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="timerDisplay" class="timer" style="display:none;">⏱ 15s</div>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div id="status">Waiting for opponent...</div>
+        <!-- Reset button hidden in online, handled by popup -->
+        <button id="resetBtn" style="display:none;">Play Again</button>
+    </main>
+
+    <script src="firebase-config.js"></script>
+    <script src="ui-components.js"></script>
+    <script src="online.js"></script>
+</body>
+</html>
