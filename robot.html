@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot - Tic Tac Toe</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+    <header>
+        <h1>Robot Mode</h1>
+        <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
+            <div class="theme-selector-container">
+                <select id="themeSelect" style="padding: 5px; border-radius: 5px;">
+                    <option value="light">Classic Light</option>
+                    <option value="dark">Dark Mode</option>
+                    <option value="neon">Neon Blue</option>
+                    <option value="retro">Pixel Retro</option>
+                </select>
+            </div>
+            <button onclick="location.href='../index.html'">🏠 Back</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="difficulty-container" id="difficultyContainer">
+            <h2>Select Difficulty</h2>
+            <button id="easyBtn">Easy</button>
+            <button id="hardBtn">Hard</button>
+        </div>
+
+        <div id="startContainer" style="display:none; text-align:center;">
+            <button id="startBtn">Start Game</button>
+        </div>
+
+        <div class="board" id="board" style="display:none;">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div id="status"></div>
+        <button id="resetBtn" style="display:none;">Reset</button>
+    </main>
+
+    <script src="ui-components.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

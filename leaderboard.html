@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Tic Tac Toe</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+    <header>
+        <h1>🏆 Leaderboard</h1>
+        <a href="../index.html"><button class="secondary">🏠 Home</button></a>
+    </header>
+
+    <main>
+        <div class="box">
+            <div class="theme-selector">
+                <label>Theme: </label>
+                <select id="themeSelect">
+                    <option value="light">Classic Light</option>
+                    <option value="dark">Dark Mode</option>
+                    <option value="neon">Neon Blue</option>
+                    <option value="retro">Pixel Retro</option>
+                </select>
+            </div>
+
+            <table id="leaderboardTable" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background: var(--primary-color); color: white;">
+                        <th style="padding: 10px;">Rank</th>
+                        <th style="padding: 10px;">Player</th>
+                        <th style="padding: 10px;">Wins</th>
+                        <th style="padding: 10px;">Games</th>
+                        <th style="padding: 10px;">Win %</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Rows will be populated by JS -->
+                    <tr><td colspan="5">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="ui-components.js"></script>
+    <script src="online.js"></script>
+    <script>
+        // Load Leaderboard
+        document.addEventListener('DOMContentLoaded', () => {
+            if(online.init()) {
+                const lbRef = firebase.database().ref('leaderboard').orderByChild('wins').limitToLast(10);
+                lbRef.on('value', snap => {
+                    const data = [];
+                    snap.forEach(child => data.push(child.val()));
+                    data.sort((a,b) => b.wins - a.wins); // Descending
+                    
+                    const tbody = document.getElementById('leaderboardBody');
+                    tbody.innerHTML = '';
+                    data.forEach((p, i) => {
+                        const tr = document.createElement('tr');
+                        const winRate = p.games > 0 ? Math.round((p.wins / p.games) * 100) : 0;
+                        tr.innerHTML = `
+                            <td style="padding: 10px; border-bottom: 1px solid var(--secondary-color);">${i+1}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--secondary-color);">${p.name}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--secondary-color);">${p.wins}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--secondary-color);">${p.games}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--secondary-color);">${winRate}%</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

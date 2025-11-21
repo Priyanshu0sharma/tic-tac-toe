@@ -1,0 +1,64 @@
+/* Themes System */
+:root {
+  /* Classic (Light) */
+  --bg-color: #f0f2f5;
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --primary-color: #4e73df;
+  --secondary-color: #858796;
+  --accent-color: #e74a3b;
+  --success-color: #1cc88a;
+  --board-bg: #ffffff;
+  --cell-bg: #f8f9fc;
+  --cell-hover: #eaecf4;
+  --border-radius: 12px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --bg-color: #1a1c23;
+  --card-bg: #252836;
+  --text-color: #e2e8f0;
+  --primary-color: #6366f1;
+  --secondary-color: #94a3b8;
+  --accent-color: #f43f5e;
+  --success-color: #10b981;
+  --board-bg: #2d3748;
+  --cell-bg: #1a202c;
+  --cell-hover: #2d3748;
+  --shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Neon Blue Theme */
+[data-theme="neon"] {
+  --bg-color: #000000;
+  --card-bg: #0a0a0a;
+  --text-color: #00f3ff;
+  --primary-color: #00f3ff;
+  --secondary-color: #ff00ff;
+  --accent-color: #ff00ff;
+  --success-color: #00ff00;
+  --board-bg: #111;
+  --cell-bg: #000;
+  --cell-hover: #1a1a1a;
+  --shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Pixel Retro Theme */
+[data-theme="retro"] {
+  --bg-color: #2c2c54;
+  --card-bg: #474787;
+  --text-color: #f7f1e3;
+  --primary-color: #ffb142;
+  --secondary-color: #aaa69d;
+  --accent-color: #ff5252;
+  --success-color: #33d9b2;
+  --board-bg: #40407a;
+  --cell-bg: #2c2c54;
+  --cell-hover: #4b4b8f;
+  --shadow: 4px 4px 0px #000;
+  --border-radius: 0px;
+  font-family: 'Press Start 2P', cursive; /* Assuming font is loaded or fallback */
+}

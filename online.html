@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Online - Tic Tac Toe</title>
+<link rel="stylesheet" href="game.css" />
+<link rel="stylesheet" href="theme.css" />
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<header>
+  <h1>Online Mode</h1>
+  <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
+      <div class="theme-selector-container">
+          <select id="themeSelect" style="padding: 5px; border-radius: 5px;">
+              <option value="light">Classic Light</option>
+              <option value="dark">Dark Mode</option>
+              <option value="neon">Neon Blue</option>
+              <option value="retro">Pixel Retro</option>
+          </select>
+      </div>
+      <button onclick="location.href='../index.html'">🏠 Back</button>
+  </div>
+</header>
+
+<main>
+  <div class="online-container" id="onlineSetup">
+    
+    <!-- Name Input Section -->
+    <div class="box">
+      <h2>👤 Your Profile</h2>
+      <input type="text" id="playerNameInput" placeholder="Enter your nickname" maxlength="12"/>
+    </div>
+
+    <!-- Create Game Section -->
+    <div class="box">
+      <h2>🆕 Create New Game</h2>
+      <p style="margin-bottom:15px; color:var(--secondary-color);">Start a new room and invite a friend.</p>
+      <button id="createBtn">Create Room</button>
+    </div>
+
+    <!-- Join Game Section -->
+    <div class="box">
+      <h2>🚪 Join Existing Game</h2>
+      <p style="margin-bottom:15px; color:var(--secondary-color);">Enter a Room ID to join a friend.</p>
+      <input type="text" id="joinInput" placeholder="Room ID (e.g. X7Y2Z9)" />
+      <button id="joinBtn" class="secondary">Join Room</button>
+    </div>
+    
+    <!-- Random Match Section -->
+    <div class="box">
+      <h2>🎲 Play Random Match</h2>
+      <p style="margin-bottom:15px; color:var(--secondary-color);">Find a random opponent instantly.</p>
+      <button id="randomMatchBtn" class="accent">Play Random Match</button>
+    </div>
+
+    <!-- Leaderboard Button -->
+    <div class="box">
+        <button onclick="location.href='leaderboard.html'" class="secondary">🏆 View Leaderboard</button>
+    </div>
+
+  </div>
+</main>
+
+<script src="firebase-config.js"></script>
+<script src="ui-components.js"></script>
+<script src="online.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
