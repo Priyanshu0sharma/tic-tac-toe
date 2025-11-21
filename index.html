@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="game/theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="home-container">
+
+    <!-- Header Section -->
+    <div class="home-header">
+        <h1 class="logo">Tic Tac Toe</h1>
+
+        <!-- Theme Toggle -->
+        <div class="theme-selector-container">
+            <select id="themeSelect" style="padding: 5px; border-radius: 5px;">
+                <option value="light">Classic Light</option>
+                <option value="dark">Dark Mode</option>
+                <option value="neon">Neon Blue</option>
+                <option value="retro">Pixel Retro</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Mode Selection -->
+    <div class="mode-section">
+        <h2>Select Mode</h2>
+
+        <a href="game/local.html" class="mode-btn">
+            👥 Local Multiplayer
+        </a>
+
+        <a href="game/robot.html" class="mode-btn">
+            🤖 Play vs Robot
+        </a>
+
+        <a href="game/online.html" class="mode-btn">
+            🌐 Online Match
+        </a>
+    </div>
+
+    <!-- History Quick View -->
+    <div class="history-section">
+        <h2>Match History</h2>
+
+        <div id="historyQuickList" class="history-list">
+            <!-- Script will auto-load last 5 matches -->
+        </div>
+
+        <a href="game/history.html" class="history-full-btn">
+            View Full History →
+        </a>
+    </div>
+
+</div>
+
+<script src="game/ui-components.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

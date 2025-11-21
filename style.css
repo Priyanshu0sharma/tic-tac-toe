@@ -1,0 +1,308 @@
+/* ------------------------------------
+   GLOBAL RESET
+------------------------------------ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+    user-select: none;
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: 0.3s ease;
+    padding: 20px;
+}
+
+/* ------------------------------------
+   THEME HANDLING
+------------------------------------ */
+/* Variables are now imported from game/theme.css */
+
+/* ------------------------------------
+   HOME CONTAINER
+------------------------------------ */
+.home-container {
+    max-width: 450px;
+    margin: auto;
+}
+
+/* ------------------------------------
+   HEADER
+------------------------------------ */
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-shadow: 0 0 10px var(--primary-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    width: 45px;
+    height: 45px;
+    background: var(--card-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 10px #0004;
+}
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* ------------------------------------
+   MODE BUTTONS
+------------------------------------ */
+.mode-section {
+    margin-top: 40px;
+}
+
+.mode-section h2,
+.history-section h2 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.mode-btn {
+    display: block;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: 12px;
+    margin: 12px 0;
+    text-decoration: none;
+    text-align: center;
+    font-size: 18px;
+    transition: 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.mode-btn:hover {
+    background: var(--btn-hover);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+}
+
+/* ------------------------------------
+   HISTORY SECTION
+------------------------------------ */
+.history-section {
+    margin-top: 40px;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.history-list {
+    margin-top: 10px;
+}
+
+.history-item {
+    padding: 10px;
+    background: var(--secondary-color);
+    border-radius: 10px;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    border-left: 5px solid var(--primary-color);
+    opacity: 0;
+    animation: fadeIn 0.4s forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+.history-full-btn {
+    display: block;
+    margin-top: 15px;
+    text-align: right;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* ------------------------------------
+   GAME BOARD STYLE (For all game pages)
+------------------------------------ */
+.board {
+    width: 100%;
+    max-width: 350px;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.cell {
+    width: 100%;
+    height: 100px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 42px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 2px solid var(--btn-hover);
+}
+
+.cell:hover {
+    transform: scale(1.05);
+    border-color: var(--primary-color);
+}
+
+.cell.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Winning highlight */
+.win {
+    background: var(--primary-color) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px var(--primary-color);
+}
+
+/* ------------------------------------
+   BUTTONS GENERAL
+------------------------------------ */
+button {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: var(--btn-hover);
+}
+
+/* ------------------------------------
+   STATUS BAR
+------------------------------------ */
+#status {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* ------------------------------------
+   INPUTS
+------------------------------------ */
+input[type="text"], input[type="number"] {
+    width: 90%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid var(--btn-hover);
+    background: var(--card-bg);
+    color: var(--text-color);
+    margin: 12px 0;
+    outline: none;
+    transition: 0.3s;
+}
+
+input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+}
+
+/* ------------------------------------
+   ROOM UI / WAIT PAGE
+------------------------------------ */
+.room-box {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 30px;
+    text-align: center;
+    border: 2px solid var(--btn-hover);
+}
+
+.room-code {
+    font-size: 26px;
+    color: var(--primary-color);
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+/* ------------------------------------
+   TIMER
+------------------------------------ */
+.timer {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 10px;
+    color: var(--primary-color);
+}
+
+/* ------------------------------------
+   MODALS
+------------------------------------ */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(6px);
+    background: #00000066;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 350px;
+    text-align: center;
+}
+
+/* ------------------------------------
+   HISTORY PAGE FILTER BUTTONS
+------------------------------------ */
+.filter-btn {
+    padding: 8px 15px;
+    background: var(--secondary-color);
+    border-radius: 8px;
+    display: inline-block;
+    margin: 8px;
+}
+
+/* ------------------------------------
+   ANIMATIONS
+------------------------------------ */
+.fade-pop {
+    animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
